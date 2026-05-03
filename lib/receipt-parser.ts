@@ -20,6 +20,8 @@ const NOISE_PATTERNS = [
   /우리/,
   /하나/,
   /농협/,
+  /^\d{2,4}[./-]\d{1,2}[./-]\d{1,2}/,
+  /^\d{1,2}:\d{2}/,
 ]
 
 function normalizeLine(line: string) {
@@ -40,7 +42,27 @@ function parseAmount(line: string) {
   return Number(match[1].replaceAll(",", ""))
 }
 
+function extractRestaurantFromAmountLine(line: string) {
+  const normalized = line
+    .replace(/(\d{1,3}(?:,\d{3})+|\d+)\s*원/g, " ")
+    .replace(/승인|일시불|할부|체크|신용|누적|잔여한도|이용가능/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+
+  if (!normalized || NOISE_PATTERNS.some((pattern) => pattern.test(normalized))) {
+    return null
+  }
+
+  return normalized
+}
+
 function findRestaurant(lines: string[], amountLineIndex: number) {
+  const amountLineRestaurant = extractRestaurantFromAmountLine(lines[amountLineIndex] ?? "")
+
+  if (amountLineRestaurant) {
+    return amountLineRestaurant
+  }
+
   for (let index = amountLineIndex + 1; index < lines.length; index += 1) {
     const line = lines[index]
 

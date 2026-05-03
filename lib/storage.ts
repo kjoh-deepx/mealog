@@ -1,5 +1,5 @@
-import { DEFAULT_PERSON } from "@/lib/constants"
-import type { Meal, Person } from "@/lib/types"
+import { DEFAULT_PERSON, DEFAULT_SETTINGS, SETTINGS_KEY } from "@/lib/constants"
+import type { Meal, Person, Settings } from "@/lib/types"
 
 const MEALS_KEY = "mealog:meals"
 const PEOPLE_KEY = "mealog:people"
@@ -44,6 +44,40 @@ function uniqueNames(names: string[]) {
   )
 }
 
+function normalizeHeadcount(headcount: number, people: string[]) {
+  return Math.max(1, Math.max(headcount, uniqueNames(people).length))
+}
+
+function normalizePerPersonLimit(value: number | null | undefined) {
+  if (!Number.isFinite(value) || (value ?? 0) <= 0) {
+    return DEFAULT_SETTINGS.perPersonLimit
+  }
+
+  return Math.round(value as number)
+}
+
+export function getSettings(): Settings {
+  const raw = readJson<Partial<Settings>>(SETTINGS_KEY, DEFAULT_SETTINGS)
+
+  return {
+    perPersonLimit: normalizePerPersonLimit(raw.perPersonLimit),
+  }
+}
+
+export function saveSettings(settings: Partial<Settings>) {
+  const nextSettings = {
+    ...getSettings(),
+    ...settings,
+  }
+
+  const normalized: Settings = {
+    perPersonLimit: normalizePerPersonLimit(nextSettings.perPersonLimit),
+  }
+
+  writeJson(SETTINGS_KEY, normalized)
+  return normalized
+}
+
 export function getMeals() {
   const meals = readJson<Meal[]>(MEALS_KEY, [])
 
@@ -59,10 +93,13 @@ export function getMeals() {
 export function saveMeal(meal: Meal) {
   const meals = getMeals()
   const nextMeals = meals.filter((item) => item.id !== meal.id)
+  const normalizedPeople = uniqueNames([DEFAULT_PERSON, ...meal.people])
 
   nextMeals.push({
     ...meal,
-    people: uniqueNames([DEFAULT_PERSON, ...meal.people]),
+    headcount: normalizeHeadcount(meal.headcount, normalizedPeople),
+    estimatedAmount: meal.estimatedAmount,
+    people: normalizedPeople,
   })
 
   writeJson(MEALS_KEY, nextMeals)

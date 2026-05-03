@@ -51,4 +51,11 @@ describe("parseReceiptText", () => {
       restaurant: null,
     })
   })
+
+  it("can extract the restaurant when amount and name are on the same line", () => {
+    expect(parseReceiptText("김치도가판교테크 113,000원\n승인")).toEqual({
+      amount: 113_000,
+      restaurant: "김치도가판교테크",
+    })
+  })
 })

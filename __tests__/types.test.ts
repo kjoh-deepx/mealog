@@ -10,6 +10,7 @@ describe("types", () => {
       id: "meal-1",
       date: "2026-05-03",
       mealType,
+      headcount: 1,
       amount: 15_000,
       estimatedAmount: 14_000,
       restaurant: "식당",
@@ -27,6 +28,7 @@ describe("types", () => {
     }
 
     expectTypeOf(meal.mealType).toEqualTypeOf<MealType>()
+    expectTypeOf(meal.headcount).toEqualTypeOf<number>()
     expectTypeOf(person.mealCount).toEqualTypeOf<number>()
     expect(meal.people).toContain(person.name)
   })

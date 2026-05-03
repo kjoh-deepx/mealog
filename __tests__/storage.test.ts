@@ -8,8 +8,10 @@ import {
   getMealById,
   getMeals,
   getPeople,
+  getSettings,
   saveMeal,
   savePerson,
+  saveSettings,
   updateMeal,
 } from "@/lib/storage"
 
@@ -18,6 +20,7 @@ function createMeal(overrides: Partial<Meal> = {}): Meal {
     id: "meal-1",
     date: "2026-05-03",
     mealType: "lunch",
+    headcount: 2,
     amount: 14_000,
     estimatedAmount: 14_000,
     restaurant: "식당",
@@ -95,6 +98,24 @@ describe("storage", () => {
 
     expect(getMeals()).toHaveLength(1)
     expect(getMeals()[0]?.restaurant).toBe("대체된 식당")
+  })
+
+  it("persists settings with a safe default", () => {
+    expect(getSettings()).toEqual({
+      perPersonLimit: 14_000,
+    })
+
+    saveSettings({ perPersonLimit: 16_500 })
+
+    expect(getSettings()).toEqual({
+      perPersonLimit: 16_500,
+    })
+
+    saveSettings({ perPersonLimit: 0 })
+
+    expect(getSettings()).toEqual({
+      perPersonLimit: 14_000,
+    })
   })
 
   it("manages people, persists them, and handles empty storage", () => {

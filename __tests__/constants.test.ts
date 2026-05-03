@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { DEFAULT_PERSON, PER_PERSON_LIMIT } from "@/lib/constants"
+import { DEFAULT_PERSON, DEFAULT_SETTINGS, PER_PERSON_LIMIT } from "@/lib/constants"
 
 describe("constants", () => {
   it("exports the expected per-person limit", () => {
@@ -9,5 +9,11 @@ describe("constants", () => {
 
   it("exports the expected default person", () => {
     expect(DEFAULT_PERSON).toBe("경주")
+  })
+
+  it("exports the expected default settings", () => {
+    expect(DEFAULT_SETTINGS).toEqual({
+      perPersonLimit: 14_000,
+    })
   })
 })

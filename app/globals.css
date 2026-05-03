@@ -121,10 +121,22 @@
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
   html {
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", sans-serif;
     @apply font-sans;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+  button,
+  input,
+  textarea {
+    font: inherit;
+  }
+}
+
+@layer utilities {
+  .mealog-surface {
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
   }
 }
