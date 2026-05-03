@@ -1,6 +1,7 @@
 "use client"
 
-import { Check, Copy, MessageCircle, Pencil, ReceiptText, Trash2 } from "lucide-react"
+import { useState } from "react"
+import { Check, ChevronDown, Copy, MessageCircle, Pencil, ReceiptText, Trash2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -33,6 +34,15 @@ function formatDate(date: string) {
   }).format(new Date(`${date}T00:00:00`))
 }
 
+function formatDateTime(iso: string) {
+  return new Intl.DateTimeFormat("ko-KR", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(iso))
+}
+
 function monthKey(date: string) {
   return date.slice(0, 7)
 }
@@ -40,6 +50,180 @@ function monthKey(date: string) {
 function monthLabel(date: string) {
   const [year, month] = monthKey(date).split("-")
   return `${year}년 ${month}월`
+}
+
+function MealCard({
+  meal,
+  perPersonLimit,
+  onCopyMeal,
+  onEditMeal,
+  onDeleteMeal,
+}: {
+  meal: Meal
+  perPersonLimit: number
+  onCopyMeal: (meal: Meal) => void
+  onEditMeal: (meal: Meal) => void
+  onDeleteMeal: (id: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+
+  const divisor = Math.max(1, meal.headcount)
+  const mealLimit = meal.perPersonLimit ?? perPersonLimit
+  const splitAmount = meal.amount
+    ? Math.round(meal.amount / divisor)
+    : Math.round((meal.headcount * mealLimit) / divisor)
+  const delta = splitAmount - mealLimit
+  const totalAmount = meal.amount ?? meal.headcount * mealLimit
+
+  return (
+    <Card
+      className={cn(
+        "rounded-[22px] border transition-all duration-200",
+        meal.confirmed
+          ? "border-zinc-200 bg-white"
+          : "border-orange-200 bg-orange-50/70"
+      )}
+    >
+      {/* Collapsed summary — always visible, tap to toggle */}
+      <button
+        type="button"
+        className="w-full px-4 py-3.5 text-left"
+        onClick={() => setOpen(!open)}
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
+                {mealLabels[meal.mealType]}
+              </span>
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold",
+                  meal.confirmed
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-orange-100 text-orange-700"
+                )}
+              >
+                {meal.confirmed ? <Check className="size-3" /> : <MessageCircle className="size-3" />}
+                {meal.confirmed ? "확정" : "미확정"}
+              </span>
+            </div>
+            <div className="mt-1.5 truncate text-base font-semibold text-zinc-950">
+              {meal.restaurant || "식당명 미확인"}
+            </div>
+            <div className="mt-0.5 text-xs text-zinc-500">{formatDate(meal.date)}</div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="text-right">
+              <div className="text-lg font-semibold text-zinc-950">{formatWon(totalAmount)}</div>
+              <div className="text-xs text-zinc-500">{meal.headcount}명</div>
+            </div>
+            <ChevronDown
+              className={cn(
+                "size-4 text-zinc-400 transition-transform duration-200",
+                open && "rotate-180"
+              )}
+            />
+          </div>
+        </div>
+      </button>
+
+      {/* Expanded detail */}
+      {open && (
+        <CardContent className="space-y-3 border-t border-zinc-100 px-4 pb-4 pt-3">
+          {/* People */}
+          <div>
+            <div className="text-xs font-medium text-zinc-500">참석자</div>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {meal.people.map((name) => (
+                <span
+                  key={name}
+                  className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs text-zinc-700"
+                >
+                  {name}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Split calculation */}
+          <div className="rounded-2xl bg-zinc-50 p-3">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-zinc-600">1인당</span>
+              <span className="font-medium text-zinc-900">{formatWon(splitAmount)}</span>
+            </div>
+            <div className="mt-1 flex items-center justify-between text-sm">
+              <span className="text-zinc-600">단가 기준</span>
+              <span className="text-zinc-500">{formatWon(mealLimit)}</span>
+            </div>
+            <div
+              className={cn(
+                "mt-1.5 text-sm font-medium",
+                delta > 0 ? "text-red-600" : delta < 0 ? "text-emerald-700" : "text-zinc-500"
+              )}
+            >
+              {delta > 0 && `+${formatWon(delta)} 초과`}
+              {delta < 0 && `${formatWon(Math.abs(delta))} 여유`}
+              {delta === 0 && "기준과 동일"}
+            </div>
+          </div>
+
+          {/* Receipt */}
+          {meal.receiptText ? (
+            <div className="rounded-2xl bg-zinc-50 p-3">
+              <div className="flex items-center gap-1.5 text-xs font-medium text-zinc-500">
+                <ReceiptText className="size-3.5" />
+                영수증 원문
+              </div>
+              <pre className="mt-2 whitespace-pre-wrap text-xs leading-5 text-zinc-600">
+                {meal.receiptText}
+              </pre>
+            </div>
+          ) : null}
+
+          {/* Timestamps */}
+          <div className="flex gap-4 text-xs text-zinc-400">
+            <span>등록 {formatDateTime(meal.createdAt)}</span>
+            {meal.updatedAt !== meal.createdAt && (
+              <span>수정 {formatDateTime(meal.updatedAt)}</span>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-2 pt-1">
+            {!meal.confirmed && (
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 flex-1 rounded-xl border-orange-200 bg-white text-sm"
+                onClick={() => onEditMeal(meal)}
+              >
+                <Pencil className="size-3.5" />
+                확정하기
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              className="h-10 flex-1 rounded-xl border-zinc-200 bg-white text-sm"
+              onClick={() => onCopyMeal(meal)}
+            >
+              <Copy className="size-3.5" />
+              복사
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-10 rounded-xl border-red-200 bg-white text-sm text-red-500 hover:bg-red-50"
+              onClick={() => onDeleteMeal(meal.id)}
+            >
+              <Trash2 className="size-3.5" />
+            </Button>
+          </div>
+        </CardContent>
+      )}
+    </Card>
+  )
 }
 
 export function HistoryTab({ meals, perPersonLimit, onCopyMeal, onEditMeal, onDeleteMeal }: HistoryTabProps) {
@@ -69,128 +253,32 @@ export function HistoryTab({ meals, perPersonLimit, onCopyMeal, onEditMeal, onDe
         const totalSpent = monthMeals.reduce((sum, meal) => sum + (meal.amount ?? 0), 0)
 
         return (
-          <section key={key} className="space-y-3">
-            <Card className="rounded-[24px] border border-zinc-200 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <section key={key} className="space-y-2">
+            <Card className="rounded-[20px] border border-zinc-200 bg-white shadow-[0_8px_20px_rgba(15,23,42,0.04)]">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 py-3">
                 <div>
-                  <CardTitle className="text-base font-semibold text-zinc-950">
+                  <CardTitle className="text-sm font-semibold text-zinc-950">
                     {monthLabel(monthMeals[0].date)}
                   </CardTitle>
-                  <div className="mt-1 text-sm text-zinc-500">{monthMeals.length}건 기록</div>
+                  <div className="mt-0.5 text-xs text-zinc-500">{monthMeals.length}건</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-zinc-500">확정 총액</div>
-                  <div className="mt-1 text-lg font-semibold text-zinc-950">{formatWon(totalSpent)}</div>
+                  <div className="text-base font-semibold text-zinc-950">{formatWon(totalSpent)}</div>
                 </div>
               </CardHeader>
             </Card>
 
-            <div className="space-y-3">
-              {monthMeals.map((meal) => {
-                const divisor = Math.max(1, meal.headcount)
-                const mealLimit = meal.perPersonLimit ?? perPersonLimit
-                const splitAmount = meal.amount ? Math.round(meal.amount / divisor) : Math.round((meal.headcount * mealLimit) / divisor)
-                const delta = splitAmount - mealLimit
-
-                return (
-                  <Card
-                    key={meal.id}
-                    className={cn(
-                      "rounded-[26px] border shadow-[0_18px_40px_rgba(15,23,42,0.06)] transition-all duration-200",
-                      meal.confirmed
-                        ? "border-zinc-200 bg-white"
-                        : "border-orange-200 bg-orange-50/70"
-                    )}
-                  >
-                    <CardContent className="space-y-4 py-5">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600">
-                              {mealLabels[meal.mealType]}
-                            </span>
-                            <span
-                              className={cn(
-                                "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold",
-                                meal.confirmed
-                                  ? "bg-emerald-100 text-emerald-700"
-                                  : "bg-orange-100 text-orange-700"
-                              )}
-                            >
-                              {meal.confirmed ? <Check className="size-3.5" /> : <MessageCircle className="size-3.5" />}
-                              {meal.confirmed ? "확정" : "미확정"}
-                            </span>
-                          </div>
-                          <div className="mt-3 text-lg font-semibold text-zinc-950">
-                            {meal.restaurant || "식당명 미확인"}
-                          </div>
-                          <div className="mt-1 text-sm text-zinc-500">{formatDate(meal.date)}</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-xl font-semibold text-zinc-950">
-                            {formatWon(meal.amount ?? meal.headcount * perPersonLimit)}
-                          </div>
-                          <div className="mt-1 text-xs text-zinc-500">{meal.headcount}명 기준</div>
-                        </div>
-                      </div>
-
-                      <div className="rounded-[20px] bg-zinc-50 p-4">
-                        <div className="flex items-center justify-between gap-3 text-sm">
-                          <div className="text-zinc-600">{meal.people.join(" · ")}</div>
-                          <div className="text-zinc-500">{splitAmount.toLocaleString("ko-KR")}원/인</div>
-                        </div>
-                        <div
-                          className={cn(
-                            "mt-2 text-sm font-medium",
-                            delta > 0 ? "text-red-600" : delta < 0 ? "text-emerald-700" : "text-zinc-500"
-                          )}
-                        >
-                          {delta > 0 && `1인 +${formatWon(delta)} 초과`}
-                          {delta < 0 && `1인 ${formatWon(Math.abs(delta))} 여유`}
-                          {delta === 0 && "1인 기준과 동일"}
-                        </div>
-                        {meal.receiptText ? (
-                          <div className="mt-3 flex items-center gap-2 text-xs text-zinc-500">
-                            <ReceiptText className="size-3.5" />
-                            영수증 문자 저장됨
-                          </div>
-                        ) : null}
-                      </div>
-
-                      <div className="flex gap-2">
-                        {!meal.confirmed ? (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="h-11 flex-1 rounded-2xl border-orange-200 bg-white"
-                            onClick={() => onEditMeal(meal)}
-                          >
-                            <Pencil className="size-4" />
-                            이어서 확정
-                          </Button>
-                        ) : null}
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="h-11 flex-1 rounded-2xl border-zinc-200 bg-white"
-                          onClick={() => onCopyMeal(meal)}
-                        >
-                          <Copy className="size-4" />
-                          복사
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="h-11 rounded-2xl border-red-200 bg-white text-red-500 hover:bg-red-50"
-                          onClick={() => onDeleteMeal(meal.id)}
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )
-              })}
+            <div className="space-y-2">
+              {monthMeals.map((meal) => (
+                <MealCard
+                  key={meal.id}
+                  meal={meal}
+                  perPersonLimit={perPersonLimit}
+                  onCopyMeal={onCopyMeal}
+                  onEditMeal={onEditMeal}
+                  onDeleteMeal={onDeleteMeal}
+                />
+              ))}
             </div>
           </section>
         )
