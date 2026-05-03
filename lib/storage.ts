@@ -70,6 +70,14 @@ export function saveMeal(meal: Meal) {
   return getMeals()
 }
 
+export function getMealById(id: string) {
+  return getMeals().find((meal) => meal.id === id) ?? null
+}
+
+export function updateMeal(meal: Meal) {
+  return saveMeal(meal)
+}
+
 export function deleteMeal(id: string) {
   const nextMeals = getMeals().filter((meal) => meal.id !== id)
   writeJson(MEALS_KEY, nextMeals)
