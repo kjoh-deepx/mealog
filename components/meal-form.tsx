@@ -255,6 +255,7 @@ export function MealForm({
       date,
       mealType,
       headcount,
+      perPersonLimit,
       amount: confirmed ? parsedAmount : null,
       estimatedAmount: estimatedTotal,
       restaurant: parsedRestaurant ?? initialMeal?.restaurant ?? null,
@@ -460,14 +461,14 @@ export function MealForm({
                 )}
               </div>
 
-              <div className="mt-4 space-y-3">
+              <div className="mt-3 space-y-1.5">
                 {peopleSlots.map((slot, index) => {
                   const suggestions = slotSuggestions(index).slice(0, 6)
 
                   return (
                     <div
                       key={`slot-${index + 1}`}
-                      className="rounded-[20px] border border-zinc-200 bg-zinc-50/70 p-3 transition-all duration-200 focus-within:border-orange-300 focus-within:bg-white"
+                      className="rounded-2xl border border-zinc-200 bg-zinc-50/70 px-3 py-2 transition-all duration-200 focus-within:border-orange-300 focus-within:bg-white"
                     >
                       <div className="flex items-center gap-3">
                         <div className="flex min-w-0 flex-1 items-center gap-2">

@@ -5,6 +5,7 @@ export interface Meal {
   date: string
   mealType: MealType
   headcount: number
+  perPersonLimit: number
   amount: number | null
   estimatedAmount: number
   restaurant: string | null

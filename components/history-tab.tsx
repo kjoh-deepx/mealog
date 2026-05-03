@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, Copy, MessageCircle, Pencil, ReceiptText } from "lucide-react"
+import { Check, Copy, MessageCircle, Pencil, ReceiptText, Trash2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,6 +12,7 @@ interface HistoryTabProps {
   perPersonLimit: number
   onCopyMeal: (meal: Meal) => void
   onEditMeal: (meal: Meal) => void
+  onDeleteMeal: (id: string) => void
 }
 
 const mealLabels = {
@@ -41,7 +42,7 @@ function monthLabel(date: string) {
   return `${year}년 ${month}월`
 }
 
-export function HistoryTab({ meals, perPersonLimit, onCopyMeal, onEditMeal }: HistoryTabProps) {
+export function HistoryTab({ meals, perPersonLimit, onCopyMeal, onEditMeal, onDeleteMeal }: HistoryTabProps) {
   const groups = meals.reduce<Record<string, Meal[]>>((accumulator, meal) => {
     const key = monthKey(meal.date)
     accumulator[key] ??= []
@@ -87,8 +88,9 @@ export function HistoryTab({ meals, perPersonLimit, onCopyMeal, onEditMeal }: Hi
             <div className="space-y-3">
               {monthMeals.map((meal) => {
                 const divisor = Math.max(1, meal.headcount)
-                const splitAmount = meal.amount ? Math.round(meal.amount / divisor) : Math.round((meal.headcount * perPersonLimit) / divisor)
-                const delta = splitAmount - perPersonLimit
+                const mealLimit = meal.perPersonLimit ?? perPersonLimit
+                const splitAmount = meal.amount ? Math.round(meal.amount / divisor) : Math.round((meal.headcount * mealLimit) / divisor)
+                const delta = splitAmount - mealLimit
 
                 return (
                   <Card
@@ -174,7 +176,15 @@ export function HistoryTab({ meals, perPersonLimit, onCopyMeal, onEditMeal }: Hi
                           onClick={() => onCopyMeal(meal)}
                         >
                           <Copy className="size-4" />
-                          복사해서 등록
+                          복사
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-11 rounded-2xl border-red-200 bg-white text-red-500 hover:bg-red-50"
+                          onClick={() => onDeleteMeal(meal.id)}
+                        >
+                          <Trash2 className="size-4" />
                         </Button>
                       </div>
                     </CardContent>

@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DEFAULT_PERSON, PER_PERSON_LIMIT } from "@/lib/constants"
 import {
+  deleteMeal,
   getMeals,
   getPeopleWithCounts,
   getSettings,
@@ -88,6 +89,11 @@ export default function Home() {
     setActiveTab("register")
   }
 
+  function handleDeleteMeal(id: string) {
+    deleteMeal(id)
+    setMeals(getMeals())
+  }
+
   function handleSaveSettings() {
     const nextValue = Number(settingsInput.replace(/[^\d]/g, "")) || PER_PERSON_LIMIT
     const saved = saveSettings({ perPersonLimit: nextValue })
@@ -106,13 +112,13 @@ export default function Home() {
               <div className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-500">
                 mealog
               </div>
-              <h1 className="mt-2 text-[30px] leading-9 font-semibold text-zinc-950">
-                같이 먹은 식사,
+              <h1 className="mt-2 text-[26px] leading-8 font-medium text-zinc-950">
+                Split meals,
                 <br />
-                초안부터 확정까지.
+                track everything.
               </h1>
               <p className="mt-3 text-sm leading-6 text-zinc-500">
-                STEP 1에서 인원과 참석자를 정하고, STEP 2에서 카드 승인 문자로 금액을 확정하세요.
+                Draft first, confirm with receipt later.
               </p>
             </div>
             <Button
@@ -180,6 +186,7 @@ export default function Home() {
               meals={meals}
               perPersonLimit={perPersonLimit}
               onCopyMeal={handleCopyMeal}
+              onDeleteMeal={handleDeleteMeal}
               onEditMeal={(meal) => {
                 setEditingMeal(meal)
                 setActiveTab("register")

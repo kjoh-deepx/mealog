@@ -21,6 +21,7 @@ function createMeal(overrides: Partial<Meal> = {}): Meal {
     date: "2026-05-03",
     mealType: "lunch",
     headcount: 2,
+    perPersonLimit: 14_000,
     amount: 14_000,
     estimatedAmount: 14_000,
     restaurant: "식당",

@@ -11,6 +11,7 @@ describe("types", () => {
       date: "2026-05-03",
       mealType,
       headcount: 1,
+      perPersonLimit: 14_000,
       amount: 15_000,
       estimatedAmount: 14_000,
       restaurant: "식당",
