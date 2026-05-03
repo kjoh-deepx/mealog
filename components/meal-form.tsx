@@ -104,6 +104,8 @@ export function MealForm({
   const [date, setDate] = useState(createToday)
   const [mealType, setMealType] = useState<MealType>("lunch")
   const [headcount, setHeadcount] = useState(1)
+  const [mealRate, setMealRate] = useState(perPersonLimit)
+  const [mealRateInput, setMealRateInput] = useState(String(perPersonLimit))
   const [peopleSlots, setPeopleSlots] = useState<string[]>([DEFAULT_PERSON])
   const [receiptText, setReceiptText] = useState("")
   const [focusedSlot, setFocusedSlot] = useState<number | null>(null)
@@ -128,6 +130,9 @@ export function MealForm({
     setDate(initialMeal.date)
     setMealType(initialMeal.mealType)
     setHeadcount(nextHeadcount)
+    const rate = initialMeal.perPersonLimit ?? perPersonLimit
+    setMealRate(rate)
+    setMealRateInput(String(rate))
     setPeopleSlots(createPeopleSlots(nextHeadcount, initialMeal.people))
     setReceiptText(initialMeal.receiptText ?? "")
     setFocusedSlot(null)
@@ -147,13 +152,13 @@ export function MealForm({
     [people]
   )
 
-  const estimatedTotal = headcount * perPersonLimit
+  const estimatedTotal = headcount * mealRate
   const parsedReceipt = useMemo(() => parseReceiptText(receiptText), [receiptText])
   const parsedAmount = parsedReceipt.amount
   const parsedRestaurant = parsedReceipt.restaurant
-  const suggestedHeadcount = parsedAmount ? Math.max(1, Math.round(parsedAmount / perPersonLimit)) : null
+  const suggestedHeadcount = parsedAmount ? Math.max(1, Math.round(parsedAmount / mealRate)) : null
   const splitAmount = parsedAmount ? Math.round(parsedAmount / headcount) : null
-  const overage = splitAmount === null ? null : splitAmount - perPersonLimit
+  const overage = splitAmount === null ? null : splitAmount - mealRate
   const selectedPeople = useMemo(() => uniqueFilledPeople(peopleSlots), [peopleSlots])
   const filledCount = selectedPeople.length
   const canSaveDraft = Boolean(date && mealType && headcount >= 1)
@@ -255,7 +260,7 @@ export function MealForm({
       date,
       mealType,
       headcount,
-      perPersonLimit,
+      perPersonLimit: mealRate,
       amount: confirmed ? parsedAmount : null,
       estimatedAmount: estimatedTotal,
       restaurant: parsedRestaurant ?? initialMeal?.restaurant ?? null,
@@ -319,9 +324,9 @@ export function MealForm({
         <CardHeader className="space-y-3">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <CardTitle className="text-lg font-semibold text-zinc-950">식사 등록</CardTitle>
+              <CardTitle className="text-lg font-semibold text-zinc-950">New meal</CardTitle>
               <CardDescription className="mt-1 text-sm text-zinc-500">
-                초안을 먼저 저장하고, 카드 영수증으로 금액을 확정합니다.
+                Draft first, confirm with receipt.
               </CardDescription>
             </div>
             {initialMeal ? (
@@ -347,7 +352,7 @@ export function MealForm({
                   STEP 1. 미확정
                 </div>
                 <p className="mt-3 text-sm font-medium text-zinc-900">
-                  날짜, 식사 종류, 인원과 참석자 이름을 먼저 입력하세요.
+                  Fill in basics first.
                 </p>
               </div>
               <div className="rounded-2xl bg-white px-3 py-2 text-right shadow-sm">
@@ -393,7 +398,7 @@ export function MealForm({
                 <div>
                   <div className="text-sm font-medium text-zinc-900">명수</div>
                   <div className="mt-1 text-xs text-zinc-500">
-                    {headcount}명 × {formatWon(perPersonLimit)} = {formatWon(estimatedTotal)}
+                    {headcount}명 × {formatWon(mealRate)} = {formatWon(estimatedTotal)}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -422,6 +427,23 @@ export function MealForm({
                   >
                     <Plus className="size-4" />
                   </Button>
+                </div>
+              </div>
+              <div className="mt-3 flex items-center justify-between gap-3 border-t border-zinc-100 pt-3">
+                <div className="text-sm text-zinc-500">단가</div>
+                <div className="flex items-center gap-1">
+                  <Input
+                    inputMode="numeric"
+                    value={mealRateInput}
+                    onChange={(event) => {
+                      const v = event.target.value.replace(/[^\d]/g, "")
+                      setMealRateInput(v)
+                      const n = Number(v)
+                      if (n > 0) setMealRate(n)
+                    }}
+                    className="h-10 w-28 rounded-xl border-zinc-200 bg-zinc-50 text-center text-sm font-medium"
+                  />
+                  <span className="text-xs text-zinc-400">원</span>
                 </div>
               </div>
             </div>
@@ -605,7 +627,7 @@ export function MealForm({
               </div>
               {suggestedHeadcount ? (
                 <div className="mt-3 text-sm text-emerald-800">
-                  권장 인원: {suggestedHeadcount}명 ({formatWon(parsedAmount ?? 0)} ÷ {formatWon(perPersonLimit)})
+                  권장 인원: {suggestedHeadcount}명 ({formatWon(parsedAmount ?? 0)} ÷ {formatWon(mealRate)})
                 </div>
               ) : (
                 <div className="mt-3 text-sm text-emerald-800">
