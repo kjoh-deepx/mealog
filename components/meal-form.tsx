@@ -587,7 +587,7 @@ export function MealForm({
             </Button>
           </section>
 
-          <section className="rounded-[24px] border border-zinc-200 bg-zinc-50/80 p-4">
+          <section id="step2-receipt" className="rounded-[24px] border border-zinc-200 bg-zinc-50/80 p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-emerald-700 shadow-sm">

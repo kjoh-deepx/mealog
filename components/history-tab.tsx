@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Check, ChevronDown, Copy, MessageCircle, Pencil, ReceiptText, Trash2 } from "lucide-react"
+import { Check, ChevronDown, Copy, MessageCircle, ReceiptText, Trash2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -198,8 +198,8 @@ function MealCard({
                 className="h-10 flex-1 rounded-xl border-orange-200 bg-white text-sm"
                 onClick={() => onEditMeal(meal)}
               >
-                <Pencil className="size-3.5" />
-                확정하기
+                <ReceiptText className="size-3.5" />
+                이어서 하기
               </Button>
             )}
             <Button

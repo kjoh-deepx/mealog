@@ -190,6 +190,10 @@ export default function Home() {
               onEditMeal={(meal) => {
                 setEditingMeal(meal)
                 setActiveTab("register")
+                // Scroll to STEP 2 receipt section after tab switch
+                setTimeout(() => {
+                  document.getElementById("step2-receipt")?.scrollIntoView({ behavior: "smooth", block: "start" })
+                }, 100)
               }}
             />
           </TabsContent>
